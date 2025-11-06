@@ -1,5 +1,80 @@
 ﻿@page "/"
+@using API_Connected_Database.Models
+@inject API_Connected_Database.Services.ICatFactsService Api
+@inject API_Connected_Database.Services.ICatFactsRepository Repo
 
-<h1>Hello, world!</h1>
+<h3>API Connected Database – Cat Facts</h3>
 
-Welcome to your new app.
+<div style="margin-bottom:0.75rem;">
+    <input type="number" min="1" max="20" @bind="limit" style="width:80px;" />
+    <button @onclick="FetchAndSaveAsync" style="margin-left:6px;">Fetch and Save Data</button>
+    <button @onclick="ClearAsync" style="margin-left:6px;">Clear DB</button>
+</div>
+
+@if (isBusy)
+{
+    <p>Working...</p>
+}
+else if (!string.IsNullOrWhiteSpace(error))
+{
+    <p style="color:red">@error</p>
+}
+else if (facts?.Count > 0)
+{
+    <ul>
+        @foreach (var f in facts)
+        {
+            <li>@f.fact (@f.length characters)</li>
+        }
+    </ul>
+}
+else
+{
+    <p>No data yet.</p>
+}
+
+@code {
+    private List<CatFact> facts = new();
+    private bool isBusy;
+    private string? error;
+    private int limit = 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Repo.InitAsync();
+        await LoadFromDbAsync();
+    }
+
+    private async Task FetchAndSaveAsync()
+    {
+        isBusy = true; error = null; StateHasChanged();
+        try
+        {
+            var fetched = await Api.GetCatFactsAsync(limit);
+            await Repo.InsertAllAsync(fetched);
+            facts = await Repo.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally { isBusy = false; }
+    }
+
+    private async Task LoadFromDbAsync()
+    {
+        isBusy = true; error = null; StateHasChanged();
+        try
+        {
+            facts = await Repo.GetAllAsync();
+        }
+        catch (Exception ex) { error = ex.Message; }
+        finally { isBusy = false; }
+    }
+
+    private async Task ClearAsync()
+    {
+        await Repo.ClearAsync();
+        facts.Clear();
+    }
+}
