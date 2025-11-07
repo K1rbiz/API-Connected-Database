@@ -5,6 +5,7 @@
 
 <h3>API Connected Database – Cat Facts</h3>
 
+<!-- Added the buttons -->
 <div style="margin-bottom:0.75rem;">
     <input type="number" min="1" max="20" @bind="limit" style="width:80px;" />
     <button @onclick="FetchAndSaveAsync" style="margin-left:6px;">Fetch and Save Data</button>
@@ -34,47 +35,49 @@ else
 }
 
 @code {
+    // State variables
     private List<CatFact> facts = new();
     private bool isBusy;
     private string? error;
     private int limit = 5;
 
+    // Lifecycle method to load data from the database on initialization
     protected override async Task OnInitializedAsync()
     {
-        await Repo.InitAsync();
-        await LoadFromDbAsync();
+        await Repo.InitAsync(); // Ensure the database is initialized
+        await LoadFromDbAsync(); // Load existing data from the database
     }
 
+    // Method to fetch data from the API and save it to the database
     private async Task FetchAndSaveAsync()
     {
-        isBusy = true; error = null; StateHasChanged();
+        isBusy = true; error = null; StateHasChanged(); // Update UI immediately
         try
         {
-            var fetched = await Api.GetCatFactsAsync(limit);
-            await Repo.InsertAllAsync(fetched);
-            facts = await Repo.GetAllAsync();
+            var fetched = await Api.GetCatFactsAsync(limit); // Fetch data from the API
+            await Repo.InsertAllAsync(fetched); // Save fetched data to the database
+            facts = await Repo.GetAllAsync(); // Reload data from the database
         }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-        }
-        finally { isBusy = false; }
+        catch (Exception ex){ error = ex.Message; } // Handle any errors
+        finally { isBusy = false; } // Ensure isBusy is reset
     }
 
+    // Method to load data from the database
     private async Task LoadFromDbAsync()
     {
-        isBusy = true; error = null; StateHasChanged();
+        isBusy = true; error = null; StateHasChanged(); // Update UI immediately
         try
         {
-            facts = await Repo.GetAllAsync();
+            facts = await Repo.GetAllAsync(); // Load data from the database
         }
-        catch (Exception ex) { error = ex.Message; }
+        catch (Exception ex) { error = ex.Message; } // Handle any errors
         finally { isBusy = false; }
     }
 
+    // Method to clear all data from the database
     private async Task ClearAsync()
     {
-        await Repo.ClearAsync();
-        facts.Clear();
+        await Repo.ClearAsync(); // Clear all data from the database
+        facts.Clear(); // Clear the local list
     }
 }

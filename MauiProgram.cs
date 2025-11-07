@@ -23,7 +23,7 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // 🔧 REQUIRED for Blazor Hybrid — this is what your exception is asking for
+        // REQUIRED for Blazor Hybrid
         builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
